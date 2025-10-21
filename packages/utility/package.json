@@ -9,8 +9,10 @@
 	"private": true,
 	"scripts": {
 		"clean": "rm -rf node_modules",
-		"lint": "biome check .",
+		"lint": "biome check --write .",
+		"lint:check": "biome check .",
 		"format": "biome format --write .",
+		"format:check": "biome format .",
 		"typecheck": "tsc --noEmit"
 	},
 	"keywords": [
