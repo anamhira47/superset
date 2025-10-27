@@ -35,7 +35,10 @@ class TerminalManager {
     }): Promise<string> {
         try {
             const id = randomUUID();
-            const shell = os.platform() === "win32" ? "powershell.exe" : "/bin/sh";
+            // Use user's configured shell from environment
+            const shell = os.platform() === "win32"
+                ? "powershell.exe"
+                : process.env.SHELL || "/bin/zsh";
 
             // Fetch workspace root_dir from database (ID 0)
             let workingDir = options?.cwd;
@@ -49,7 +52,6 @@ class TerminalManager {
 
                     if (workspaceData.length > 0 && workspaceData[0].rootDir) {
                         workingDir = workspaceData[0].rootDir;
-                        console.log("Working directory:", workingDir);
                     }
                 } catch (dbError) {
                     console.error("Failed to fetch workspace from database:", dbError);
@@ -67,8 +69,11 @@ class TerminalManager {
             // Fallback to HOME or process.cwd() if no workspace found or directory doesn't exist
             const finalCwd = workingDir || process.env.HOME || process.cwd();
 
-            const ptyProcess = pty.spawn(shell, [], {
-                name: "xterm-color",
+            // Use login shell to load user's shell configuration
+            const shellArgs = os.platform() === "win32" ? [] : ["-l"];
+
+            const ptyProcess = pty.spawn(shell, shellArgs, {
+                name: "xterm-256color",
                 cols: options?.cols || 80,
                 rows: options?.rows || 30,
                 cwd: finalCwd,
