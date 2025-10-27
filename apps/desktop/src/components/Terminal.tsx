@@ -1,180 +1,217 @@
 import { type ITheme, Terminal as XTerm } from "@xterm/xterm";
 import { useEffect, useRef, useState } from "react";
 import "@xterm/xterm/css/xterm.css";
+import { WebLinksAddon } from "@xterm/addon-web-links";
+import { FitAddon } from "@xterm/addon-fit";
+import { WebglAddon } from "@xterm/addon-webgl";
+import { SearchAddon } from "@xterm/addon-search";
 
 interface TerminalProps {
-    hidden?: boolean;
-    className?: string;
+	hidden?: boolean;
+	className?: string;
 }
 
 interface TerminalMessage {
-    id: string;
-    data: string;
+	id: string;
+	data: string;
 }
 
 const TERMINAL_THEME: Record<"LIGHT" | "DARK", ITheme> = {
-    LIGHT: {
-        background: "#ffffff",
-        foreground: "#2d2d2d",
-        cursor: "#333333",
-        cursorAccent: "#ffffff",
-        black: "#2d2d2d",
-        red: "#d64646",
-        green: "#4e9a06",
-        yellow: "#c4a000",
-        blue: "#3465a4",
-        magenta: "#75507b",
-        cyan: "#06989a",
-        white: "#d3d7cf",
-        brightBlack: "#555753",
-        brightRed: "#ef2929",
-        brightGreen: "#8ae234",
-        brightYellow: "#fce94f",
-        brightBlue: "#729fcf",
-        brightMagenta: "#ad7fa8",
-        brightCyan: "#34e2e2",
-        brightWhite: "#eeeeec",
-        selectionBackground: "#bfbfbf",
-    },
-    DARK: {
-        background: "#1e1e1e",
-        foreground: "#d4d4d4",
-        cursor: "#d4d4d4",
-        cursorAccent: "#1e1e1e",
-        black: "#000000",
-        red: "#cd3131",
-        green: "#0dbc79",
-        yellow: "#e5e510",
-        blue: "#2472c8",
-        magenta: "#bc3fbc",
-        cyan: "#11a8cd",
-        white: "#e5e5e5",
-        brightBlack: "#666666",
-        brightRed: "#f14c4c",
-        brightGreen: "#23d18b",
-        brightYellow: "#f5f543",
-        brightBlue: "#3b8eea",
-        brightMagenta: "#d670d6",
-        brightCyan: "#29b8db",
-        brightWhite: "#e5e5e5",
-    },
+	LIGHT: {
+		background: "#ffffff",
+		foreground: "#2d2d2d",
+		cursor: "#333333",
+		cursorAccent: "#ffffff",
+		black: "#2d2d2d",
+		red: "#d64646",
+		green: "#4e9a06",
+		yellow: "#c4a000",
+		blue: "#3465a4",
+		magenta: "#75507b",
+		cyan: "#06989a",
+		white: "#d3d7cf",
+		brightBlack: "#555753",
+		brightRed: "#ef2929",
+		brightGreen: "#8ae234",
+		brightYellow: "#fce94f",
+		brightBlue: "#729fcf",
+		brightMagenta: "#ad7fa8",
+		brightCyan: "#34e2e2",
+		brightWhite: "#eeeeec",
+		selectionBackground: "#bfbfbf",
+	},
+	DARK: {
+		background: "#1e1e1e",
+		foreground: "#d4d4d4",
+		cursor: "#d4d4d4",
+		cursorAccent: "#1e1e1e",
+		black: "#000000",
+		red: "#cd3131",
+		green: "#0dbc79",
+		yellow: "#e5e510",
+		blue: "#2472c8",
+		magenta: "#bc3fbc",
+		cyan: "#11a8cd",
+		white: "#e5e5e5",
+		brightBlack: "#666666",
+		brightRed: "#f14c4c",
+		brightGreen: "#23d18b",
+		brightYellow: "#f5f543",
+		brightBlue: "#3b8eea",
+		brightMagenta: "#d670d6",
+		brightCyan: "#29b8db",
+		brightWhite: "#e5e5e5",
+	},
 };
 
 export default function TerminalComponent({
-    hidden = false,
-    className = "",
+	hidden = false,
+	className = "",
 }: TerminalProps) {
-    const terminalRef = useRef<HTMLDivElement>(null);
-    const [terminal, setTerminal] = useState<XTerm | null>(null);
-    const [theme] = useState<"light" | "dark">("dark"); // Can be connected to theme provider later
-    const terminalIdRef = useRef<string | null>(null);
+	const terminalRef = useRef<HTMLDivElement>(null);
+	const [terminal, setTerminal] = useState<XTerm | null>(null);
+	const [theme] = useState<"light" | "dark">("dark"); // Can be connected to theme provider later
+	const terminalIdRef = useRef<string | null>(null);
 
-    useEffect(() => {
-        if (terminal) {
-            terminal.options.theme =
-                theme === "light" ? TERMINAL_THEME.LIGHT : TERMINAL_THEME.DARK;
-        }
-    }, [theme, terminal]);
+	useEffect(() => {
+		if (terminal) {
+			terminal.options.theme =
+				theme === "light" ? TERMINAL_THEME.LIGHT : TERMINAL_THEME.DARK;
+		}
+	}, [theme, terminal]);
 
-    useEffect(() => {
-        if (!terminalRef.current || terminal) {
-            return;
-        }
+	useEffect(() => {
+		if (!terminalRef.current || terminal) {
+			return;
+		}
 
-        const { term, terminalDataListener, cleanup } = initTerminal(
-            terminalRef.current,
-            theme,
-        );
-        setTerminal(term);
+		const { term, terminalDataListener, cleanup } = initTerminal(
+			terminalRef.current,
+			theme,
+		);
+		setTerminal(term);
 
-        return () => {
-            term.dispose();
-            setTerminal(null);
-            cleanup();
-        };
-    }, [theme]);
+		return () => {
+			term.dispose();
+			setTerminal(null);
+			cleanup();
+		};
+	}, [theme]);
 
-    function initTerminal(
-        container: HTMLDivElement,
-        currentTheme: "light" | "dark",
-    ) {
-        const term = new XTerm({
-            cursorBlink: true,
-            fontSize: 12,
-            fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-            theme:
-                currentTheme === "light" ? TERMINAL_THEME.LIGHT : TERMINAL_THEME.DARK,
-            convertEol: true,
-            allowTransparency: true,
-            disableStdin: false,
-        });
+	function initTerminal(
+		container: HTMLDivElement,
+		currentTheme: "light" | "dark",
+	) {
+		const term = new XTerm({
+			cursorBlink: true,
+			fontSize: 12,
+			fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+			theme:
+				currentTheme === "light" ? TERMINAL_THEME.LIGHT : TERMINAL_THEME.DARK,
+			convertEol: true,
+			allowTransparency: true,
+			disableStdin: false,
+		});
 
-        term.open(container);
-        const { cols, rows } = term;
+		term.open(container);
 
-        // Request a new terminal session
-        window.ipcRenderer
-            .invoke("terminal-create", { cols, rows })
-            .then((terminalId: string) => {
-                terminalIdRef.current = terminalId;
+		// Load addons
+		// 1. WebLinks - Makes URLs clickable and open in default browser
+		const webLinksAddon = new WebLinksAddon((event, uri) => {
+			event.preventDefault();
+			window.ipcRenderer.invoke("open-external", uri);
+		});
+		term.loadAddon(webLinksAddon);
 
-                // Get terminal history
-                return window.ipcRenderer.invoke("terminal-get-history", terminalId);
-            })
-            .then((history: string | undefined) => {
-                if (history) {
-                    term.write(history);
-                }
-            })
-            .catch((error: Error) => {
-                console.error("Failed to initialize terminal:", error);
-            });
+		// 2. WebGL Renderer - Better performance for rendering
+		try {
+			const webglAddon = new WebglAddon();
+			term.loadAddon(webglAddon);
+		} catch (e) {
+			console.warn("WebGL addon failed to load, falling back to canvas:", e);
+		}
 
-        // Set up event listeners
-        term.onData((data) => {
-            if (terminalIdRef.current) {
-                window.ipcRenderer.send("terminal-input", {
-                    id: terminalIdRef.current,
-                    data,
-                });
-            }
-        });
+		// 3. FitAddon - Automatically fit terminal to container
+		const fitAddon = new FitAddon();
+		term.loadAddon(fitAddon);
+		fitAddon.fit();
 
-        term.onResize(({ cols, rows }) => {
-            if (terminalIdRef.current) {
-                window.ipcRenderer.send("terminal-resize", {
-                    id: terminalIdRef.current,
-                    cols,
-                    rows,
-                });
-            }
-        });
+		// 4. SearchAddon - Enable text searching (Ctrl+F or Cmd+F)
+		const searchAddon = new SearchAddon();
+		term.loadAddon(searchAddon);
 
-        const terminalDataListener = (
-            _event: unknown,
-            message: TerminalMessage,
-        ) => {
-            if (message.id === terminalIdRef.current) {
-                term.write(message.data);
-            }
-        };
+		// Listen for window resize to auto-fit terminal
+		const handleResize = () => {
+			fitAddon.fit();
+		};
+		window.addEventListener("resize", handleResize);
 
-        window.ipcRenderer.on("terminal-on-data", terminalDataListener);
+		const { cols, rows } = term;
 
-        const cleanup = () => {
-            window.ipcRenderer.off("terminal-on-data", terminalDataListener);
-            if (terminalIdRef.current) {
-                window.ipcRenderer.send("terminal-kill", terminalIdRef.current);
-            }
-        };
+		// Request a new terminal session
+		window.ipcRenderer
+			.invoke("terminal-create", { cols, rows })
+			.then((terminalId: string) => {
+				terminalIdRef.current = terminalId;
 
-        return { term, terminalDataListener, cleanup };
-    }
+				// Get terminal history
+				return window.ipcRenderer.invoke("terminal-get-history", terminalId);
+			})
+			.then((history: string | undefined) => {
+				if (history) {
+					term.write(history);
+				}
+			})
+			.catch((error: Error) => {
+				console.error("Failed to initialize terminal:", error);
+			});
 
-    return (
-        <div
-            ref={terminalRef}
-            className={`h-full w-full p-2 transition-opacity duration-200 text-start ${hidden ? "opacity-0" : "opacity-100 delay-300"}`}
-        />
-    );
+		// Set up event listeners
+		term.onData((data) => {
+			if (terminalIdRef.current) {
+				window.ipcRenderer.send("terminal-input", {
+					id: terminalIdRef.current,
+					data,
+				});
+			}
+		});
+
+		term.onResize(({ cols, rows }) => {
+			if (terminalIdRef.current) {
+				window.ipcRenderer.send("terminal-resize", {
+					id: terminalIdRef.current,
+					cols,
+					rows,
+				});
+			}
+		});
+
+		const terminalDataListener = (
+			_event: unknown,
+			message: TerminalMessage,
+		) => {
+			if (message.id === terminalIdRef.current) {
+				term.write(message.data);
+			}
+		};
+
+		window.ipcRenderer.on("terminal-on-data", terminalDataListener);
+
+		const cleanup = () => {
+			window.ipcRenderer.off("terminal-on-data", terminalDataListener);
+			window.removeEventListener("resize", handleResize);
+			if (terminalIdRef.current) {
+				window.ipcRenderer.send("terminal-kill", terminalIdRef.current);
+			}
+		};
+
+		return { term, terminalDataListener, cleanup };
+	}
+
+	return (
+		<div
+			ref={terminalRef}
+			className={`h-full w-full p-2 transition-opacity duration-200 text-start ${hidden ? "opacity-0" : "opacity-100 delay-300"}`}
+		/>
+	);
 }

@@ -170,6 +170,11 @@ ipcMain.handle("terminal-get-history", (_, id: string) => {
 	return terminalManager.getHistory(id);
 });
 
+// Open external URL
+ipcMain.handle("open-external", (_, url: string) => {
+	shell.openExternal(url);
+});
+
 // Clean up terminals on app quit
 app.on("before-quit", () => {
 	terminalManager.killAll();
