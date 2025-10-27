@@ -11,9 +11,10 @@ interface Tab {
 interface SidebarProps {
 	onTabSelect: (tabId: string) => void;
 	activeTabId?: string;
+	onCollapse: () => void;
 }
 
-export function Sidebar({ onTabSelect, activeTabId }: SidebarProps) {
+export function Sidebar({ onTabSelect, activeTabId, onCollapse }: SidebarProps) {
 	const [tabs, setTabs] = useState<Tab[]>([
 		{ id: "1", title: "Terminal", type: "terminal" },
 	]);
@@ -40,35 +41,56 @@ export function Sidebar({ onTabSelect, activeTabId }: SidebarProps) {
 	return (
 		<div className="flex flex-col h-full w-64 select-none bg-neutral-900 text-neutral-300 border-r border-neutral-800">
 			{/* Top Section - Window Controls */}
-			<div className="flex items-center justify-start gap-2 px-4 py-3 border-b border-neutral-800">
+			<div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-neutral-800">
 				<div className="flex gap-2">
 					<div className="w-3 h-3 rounded-full bg-[#FF5F57]" />
 					<div className="w-3 h-3 rounded-full bg-[#FEBC2E]" />
 					<div className="w-3 h-3 rounded-full bg-[#28C840]" />
 				</div>
-				<div className="flex-1" />
-				<button className="transition-colors">
-					<svg
-						width="16"
-						height="16"
-						viewBox="0 0 16 16"
-						fill="none"
-						xmlns="http://www.w3.org/2000/svg"
+				<div className="flex items-center gap-2">
+					<button
+						onClick={onCollapse}
+						className="opacity-70 hover:opacity-100 transition-colors"
 					>
-						<path
-							d="M3 8H13"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-						/>
-						<path
-							d="M8 3V13"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-						/>
-					</svg>
-				</button>
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 16 16"
+							fill="none"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M10 4L6 8L10 12"
+								stroke="currentColor"
+								strokeWidth="1.5"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							/>
+						</svg>
+					</button>
+					<button className="opacity-70 hover:opacity-100 transition-colors">
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 16 16"
+							fill="none"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								d="M3 8H13"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+							/>
+							<path
+								d="M8 3V13"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+							/>
+						</svg>
+					</button>
+				</div>
 			</div>
 
 			{/* Favorites Section */}
